@@ -1,0 +1,17 @@
+name: New BORAK Version Notification
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  new_version_noti:
+    runs-on: ubuntu-latest
+    name: Emit web socket event to notify a new version deployed
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Notify deployment through web socket
+        uses: ./.github/actions/new-version-noti
+        with:
+          destination: 'http://967b-2001-e68-5418-b3aa-8547-63c8-5df5-e62f.ngrok.io'
