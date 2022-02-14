@@ -1,5 +1,5 @@
 {
-  "name": "test-action",
+  "name": "new-version-noti",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,6 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "@actions/core": "^1.6.0",
-    "@actions/github": "^5.0.0"
+    "socket.io-client": "^4.4.1"
   }
 }

@@ -1,0 +1,9 @@
+name: 'New Version Notification'
+description: 'Emit socket event upon deployment'
+inputs:
+  destination:
+    description: 'url of notification destination'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

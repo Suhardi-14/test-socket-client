@@ -1,16 +1,18 @@
+const core = require('@actions/core');
+
 var _socket = null;
 
-_socket = require('socket.io-client')('http://localhost:5050', {
+_socket = require('socket.io-client')(core.getInput('destination'), {
   autoConnect: false,
 });
 
-_socket.on('connect', () => {
+_socket.on('connect', function () {
   if (_socket.connected) {
     console.log('successfully connected to server');
   }
 });
 
-_socket.on('receivedNoti', () => {
+_socket.on('receivedNoti', function () {
   console.log('Server had received the noti. Now closing connection...');
   _socket.disconnect();
 });

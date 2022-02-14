@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "create socket client for test",
   "scripts": {
-    "start": "node test-socket-client.js",
+    "start": "nodemon test-socket-client.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "suhardi",
   "dependencies": {
     "socket.io-client": "^4.4.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   }
 }
