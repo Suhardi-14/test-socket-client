@@ -32,3 +32,5 @@ jobs:
           script: |
             pwd
             ls -l
+            cd ~/socket-client
+            npm run start
