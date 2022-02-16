@@ -10,6 +10,11 @@ _socket.on('connect', function () {
   }
 });
 
+_socket.on('connect_error', () => {
+  console.log('Unable to establish socket connection. Stopping process');
+  process.exit(1);
+});
+
 _socket.on('receivedNoti', function () {
   console.log('Server had received the noti. Now closing connection...');
   _socket.disconnect();

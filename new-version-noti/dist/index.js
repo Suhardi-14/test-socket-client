@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 702:
+/***/ 5951:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -184,7 +184,7 @@ Emitter.prototype.hasListeners = function(event){
 
 /***/ }),
 
-/***/ 8669:
+/***/ 484:
 /***/ ((module) => {
 
 
@@ -276,7 +276,7 @@ Backoff.prototype.setJitter = function(jitter){
 
 /***/ }),
 
-/***/ 2368:
+/***/ 2504:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /* eslint-env browser */
@@ -533,7 +533,7 @@ function localstorage() {
 	}
 }
 
-module.exports = __nccwpck_require__(2245)(exports);
+module.exports = __nccwpck_require__(713)(exports);
 
 const {formatters} = module.exports;
 
@@ -552,7 +552,7 @@ formatters.j = function (v) {
 
 /***/ }),
 
-/***/ 2245:
+/***/ 713:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -568,7 +568,7 @@ function setup(env) {
 	createDebug.disable = disable;
 	createDebug.enable = enable;
 	createDebug.enabled = enabled;
-	createDebug.humanize = __nccwpck_require__(8992);
+	createDebug.humanize = __nccwpck_require__(7790);
 	createDebug.destroy = destroy;
 
 	Object.keys(env).forEach(key => {
@@ -833,7 +833,7 @@ module.exports = setup;
 
 /***/ }),
 
-/***/ 9062:
+/***/ 1308:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -842,15 +842,15 @@ module.exports = setup;
  */
 
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __nccwpck_require__(2368);
+	module.exports = __nccwpck_require__(2504);
 } else {
-	module.exports = __nccwpck_require__(393);
+	module.exports = __nccwpck_require__(1990);
 }
 
 
 /***/ }),
 
-/***/ 393:
+/***/ 1990:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /**
@@ -1092,7 +1092,7 @@ function init(debug) {
 	}
 }
 
-module.exports = __nccwpck_require__(2245)(exports);
+module.exports = __nccwpck_require__(713)(exports);
 
 const {formatters} = module.exports;
 
@@ -1120,7 +1120,23 @@ formatters.O = function (v) {
 
 /***/ }),
 
-/***/ 8992:
+/***/ 2598:
+/***/ ((module) => {
+
+"use strict";
+
+module.exports = (flag, argv) => {
+	argv = argv || process.argv;
+	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
+	const pos = argv.indexOf(prefix + flag);
+	const terminatorPos = argv.indexOf('--');
+	return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
+};
+
+
+/***/ }),
+
+/***/ 7790:
 /***/ ((module) => {
 
 /**
@@ -1289,7 +1305,7 @@ function plural(ms, msAbs, n, name) {
 
 /***/ }),
 
-/***/ 1411:
+/***/ 9789:
 /***/ ((__unused_webpack_module, exports) => {
 
 /**
@@ -1333,7 +1349,7 @@ exports.decode = function(qs){
 
 /***/ }),
 
-/***/ 9851:
+/***/ 5361:
 /***/ ((module) => {
 
 /**
@@ -1408,18 +1424,157 @@ function queryKey(uri, query) {
 
 /***/ }),
 
-/***/ 9645:
+/***/ 6000:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const os = __nccwpck_require__(2037);
+const hasFlag = __nccwpck_require__(2598);
+
+const env = process.env;
+
+let forceColor;
+if (hasFlag('no-color') ||
+	hasFlag('no-colors') ||
+	hasFlag('color=false')) {
+	forceColor = false;
+} else if (hasFlag('color') ||
+	hasFlag('colors') ||
+	hasFlag('color=true') ||
+	hasFlag('color=always')) {
+	forceColor = true;
+}
+if ('FORCE_COLOR' in env) {
+	forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
+}
+
+function translateLevel(level) {
+	if (level === 0) {
+		return false;
+	}
+
+	return {
+		level,
+		hasBasic: true,
+		has256: level >= 2,
+		has16m: level >= 3
+	};
+}
+
+function supportsColor(stream) {
+	if (forceColor === false) {
+		return 0;
+	}
+
+	if (hasFlag('color=16m') ||
+		hasFlag('color=full') ||
+		hasFlag('color=truecolor')) {
+		return 3;
+	}
+
+	if (hasFlag('color=256')) {
+		return 2;
+	}
+
+	if (stream && !stream.isTTY && forceColor !== true) {
+		return 0;
+	}
+
+	const min = forceColor ? 1 : 0;
+
+	if (process.platform === 'win32') {
+		// Node.js 7.5.0 is the first version of Node.js to include a patch to
+		// libuv that enables 256 color output on Windows. Anything earlier and it
+		// won't work. However, here we target Node.js 8 at minimum as it is an LTS
+		// release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
+		// release that supports 256 colors. Windows 10 build 14931 is the first release
+		// that supports 16m/TrueColor.
+		const osRelease = os.release().split('.');
+		if (
+			Number(process.versions.node.split('.')[0]) >= 8 &&
+			Number(osRelease[0]) >= 10 &&
+			Number(osRelease[2]) >= 10586
+		) {
+			return Number(osRelease[2]) >= 14931 ? 3 : 2;
+		}
+
+		return 1;
+	}
+
+	if ('CI' in env) {
+		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
+			return 1;
+		}
+
+		return min;
+	}
+
+	if ('TEAMCITY_VERSION' in env) {
+		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
+	}
+
+	if (env.COLORTERM === 'truecolor') {
+		return 3;
+	}
+
+	if ('TERM_PROGRAM' in env) {
+		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
+
+		switch (env.TERM_PROGRAM) {
+			case 'iTerm.app':
+				return version >= 3 ? 3 : 2;
+			case 'Apple_Terminal':
+				return 2;
+			// No default
+		}
+	}
+
+	if (/-256(color)?$/i.test(env.TERM)) {
+		return 2;
+	}
+
+	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+		return 1;
+	}
+
+	if ('COLORTERM' in env) {
+		return 1;
+	}
+
+	if (env.TERM === 'dumb') {
+		return min;
+	}
+
+	return min;
+}
+
+function getSupportLevel(stream) {
+	const level = supportsColor(stream);
+	return translateLevel(level);
+}
+
+module.exports = {
+	supportsColor: getSupportLevel,
+	stdout: getSupportLevel(process.stdout),
+	stderr: getSupportLevel(process.stderr)
+};
+
+
+/***/ }),
+
+/***/ 1161:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const WebSocket = __nccwpck_require__(8363);
+const WebSocket = __nccwpck_require__(5477);
 
-WebSocket.createWebSocketStream = __nccwpck_require__(2574);
-WebSocket.Server = __nccwpck_require__(183);
-WebSocket.Receiver = __nccwpck_require__(3231);
-WebSocket.Sender = __nccwpck_require__(3901);
+WebSocket.createWebSocketStream = __nccwpck_require__(6589);
+WebSocket.Server = __nccwpck_require__(8971);
+WebSocket.Receiver = __nccwpck_require__(7770);
+WebSocket.Sender = __nccwpck_require__(1311);
 
 WebSocket.WebSocket = WebSocket;
 WebSocket.WebSocketServer = WebSocket.Server;
@@ -1429,13 +1584,13 @@ module.exports = WebSocket;
 
 /***/ }),
 
-/***/ 9234:
+/***/ 610:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { EMPTY_BUFFER } = __nccwpck_require__(381);
+const { EMPTY_BUFFER } = __nccwpck_require__(5973);
 
 /**
  * Merges an array of buffers into a new buffer.
@@ -1563,7 +1718,7 @@ try {
 
 /***/ }),
 
-/***/ 381:
+/***/ 5973:
 /***/ ((module) => {
 
 "use strict";
@@ -1583,13 +1738,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 8744:
+/***/ 2620:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { kForOnEventAttribute, kListener } = __nccwpck_require__(381);
+const { kForOnEventAttribute, kListener } = __nccwpck_require__(5973);
 
 const kCode = Symbol('kCode');
 const kData = Symbol('kData');
@@ -1857,13 +2012,13 @@ module.exports = {
 
 /***/ }),
 
-/***/ 1511:
+/***/ 1390:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { tokenChars } = __nccwpck_require__(1735);
+const { tokenChars } = __nccwpck_require__(8042);
 
 /**
  * Adds an offer to the map of extension offers or a parameter to the map of
@@ -2068,7 +2223,7 @@ module.exports = { format, parse };
 
 /***/ }),
 
-/***/ 6519:
+/***/ 4786:
 /***/ ((module) => {
 
 "use strict";
@@ -2131,7 +2286,7 @@ module.exports = Limiter;
 
 /***/ }),
 
-/***/ 5216:
+/***/ 1757:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2139,9 +2294,9 @@ module.exports = Limiter;
 
 const zlib = __nccwpck_require__(9796);
 
-const bufferUtil = __nccwpck_require__(9234);
-const Limiter = __nccwpck_require__(6519);
-const { kStatusCode } = __nccwpck_require__(381);
+const bufferUtil = __nccwpck_require__(610);
+const Limiter = __nccwpck_require__(4786);
+const { kStatusCode } = __nccwpck_require__(5973);
 
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const kPerMessageDeflate = Symbol('permessage-deflate');
@@ -2650,7 +2805,7 @@ function inflateOnError(err) {
 
 /***/ }),
 
-/***/ 3231:
+/***/ 7770:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -2658,15 +2813,15 @@ function inflateOnError(err) {
 
 const { Writable } = __nccwpck_require__(2781);
 
-const PerMessageDeflate = __nccwpck_require__(5216);
+const PerMessageDeflate = __nccwpck_require__(1757);
 const {
   BINARY_TYPES,
   EMPTY_BUFFER,
   kStatusCode,
   kWebSocket
-} = __nccwpck_require__(381);
-const { concat, toArrayBuffer, unmask } = __nccwpck_require__(9234);
-const { isValidStatusCode, isValidUTF8 } = __nccwpck_require__(1735);
+} = __nccwpck_require__(5973);
+const { concat, toArrayBuffer, unmask } = __nccwpck_require__(610);
+const { isValidStatusCode, isValidUTF8 } = __nccwpck_require__(8042);
 
 const GET_INFO = 0;
 const GET_PAYLOAD_LENGTH_16 = 1;
@@ -3270,7 +3425,7 @@ function error(ErrorCtor, message, prefix, statusCode, errorCode) {
 
 /***/ }),
 
-/***/ 3901:
+/***/ 1311:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3282,10 +3437,10 @@ const net = __nccwpck_require__(1808);
 const tls = __nccwpck_require__(4404);
 const { randomFillSync } = __nccwpck_require__(6113);
 
-const PerMessageDeflate = __nccwpck_require__(5216);
-const { EMPTY_BUFFER } = __nccwpck_require__(381);
-const { isValidStatusCode } = __nccwpck_require__(1735);
-const { mask: applyMask, toBuffer } = __nccwpck_require__(9234);
+const PerMessageDeflate = __nccwpck_require__(1757);
+const { EMPTY_BUFFER } = __nccwpck_require__(5973);
+const { isValidStatusCode } = __nccwpck_require__(8042);
+const { mask: applyMask, toBuffer } = __nccwpck_require__(610);
 
 const mask = Buffer.alloc(4);
 
@@ -3700,7 +3855,7 @@ module.exports = Sender;
 
 /***/ }),
 
-/***/ 2574:
+/***/ 6589:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -3888,13 +4043,13 @@ module.exports = createWebSocketStream;
 
 /***/ }),
 
-/***/ 1669:
+/***/ 549:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
 
 
-const { tokenChars } = __nccwpck_require__(1735);
+const { tokenChars } = __nccwpck_require__(8042);
 
 /**
  * Parses the `Sec-WebSocket-Protocol` header into a set of subprotocol names.
@@ -3958,7 +4113,7 @@ module.exports = { parse };
 
 /***/ }),
 
-/***/ 1735:
+/***/ 8042:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4090,7 +4245,7 @@ try {
 
 /***/ }),
 
-/***/ 183:
+/***/ 8971:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4105,11 +4260,11 @@ const net = __nccwpck_require__(1808);
 const tls = __nccwpck_require__(4404);
 const { createHash } = __nccwpck_require__(6113);
 
-const extension = __nccwpck_require__(1511);
-const PerMessageDeflate = __nccwpck_require__(5216);
-const subprotocol = __nccwpck_require__(1669);
-const WebSocket = __nccwpck_require__(8363);
-const { GUID, kWebSocket } = __nccwpck_require__(381);
+const extension = __nccwpck_require__(1390);
+const PerMessageDeflate = __nccwpck_require__(1757);
+const subprotocol = __nccwpck_require__(549);
+const WebSocket = __nccwpck_require__(5477);
+const { GUID, kWebSocket } = __nccwpck_require__(5973);
 
 const keyRegex = /^[+/0-9A-Za-z]{22}==$/;
 
@@ -4583,7 +4738,7 @@ function abortHandshake(socket, code, message, headers) {
 
 /***/ }),
 
-/***/ 8363:
+/***/ 5477:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
@@ -4600,9 +4755,9 @@ const { randomBytes, createHash } = __nccwpck_require__(6113);
 const { Readable } = __nccwpck_require__(2781);
 const { URL } = __nccwpck_require__(7310);
 
-const PerMessageDeflate = __nccwpck_require__(5216);
-const Receiver = __nccwpck_require__(3231);
-const Sender = __nccwpck_require__(3901);
+const PerMessageDeflate = __nccwpck_require__(1757);
+const Receiver = __nccwpck_require__(7770);
+const Sender = __nccwpck_require__(1311);
 const {
   BINARY_TYPES,
   EMPTY_BUFFER,
@@ -4612,12 +4767,12 @@ const {
   kStatusCode,
   kWebSocket,
   NOOP
-} = __nccwpck_require__(381);
+} = __nccwpck_require__(5973);
 const {
   EventTarget: { addEventListener, removeEventListener }
-} = __nccwpck_require__(8744);
-const { format, parse } = __nccwpck_require__(1511);
-const { toBuffer } = __nccwpck_require__(9234);
+} = __nccwpck_require__(2620);
+const { format, parse } = __nccwpck_require__(1390);
+const { toBuffer } = __nccwpck_require__(610);
 
 const readyStates = ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'];
 const subprotocolRegex = /^[!#$%&'*+\-.0-9A-Z^_`|a-z~]+$/;
@@ -5740,7 +5895,7 @@ function socketOnError() {
 
 /***/ }),
 
-/***/ 7687:
+/***/ 9056:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 /**
@@ -6420,7 +6575,7 @@ function XMLHttpRequest(opts) {
 
 /***/ }),
 
-/***/ 6311:
+/***/ 3419:
 /***/ ((module) => {
 
 "use strict";
@@ -6492,161 +6647,6 @@ for (; i < length; i++) map[alphabet[i]] = i;
 yeast.encode = encode;
 yeast.decode = decode;
 module.exports = yeast;
-
-
-/***/ }),
-
-/***/ 2598:
-/***/ ((module) => {
-
-"use strict";
-
-module.exports = (flag, argv) => {
-	argv = argv || process.argv;
-	const prefix = flag.startsWith('-') ? '' : (flag.length === 1 ? '-' : '--');
-	const pos = argv.indexOf(prefix + flag);
-	const terminatorPos = argv.indexOf('--');
-	return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
-};
-
-
-/***/ }),
-
-/***/ 6000:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const os = __nccwpck_require__(2037);
-const hasFlag = __nccwpck_require__(2598);
-
-const env = process.env;
-
-let forceColor;
-if (hasFlag('no-color') ||
-	hasFlag('no-colors') ||
-	hasFlag('color=false')) {
-	forceColor = false;
-} else if (hasFlag('color') ||
-	hasFlag('colors') ||
-	hasFlag('color=true') ||
-	hasFlag('color=always')) {
-	forceColor = true;
-}
-if ('FORCE_COLOR' in env) {
-	forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
-}
-
-function translateLevel(level) {
-	if (level === 0) {
-		return false;
-	}
-
-	return {
-		level,
-		hasBasic: true,
-		has256: level >= 2,
-		has16m: level >= 3
-	};
-}
-
-function supportsColor(stream) {
-	if (forceColor === false) {
-		return 0;
-	}
-
-	if (hasFlag('color=16m') ||
-		hasFlag('color=full') ||
-		hasFlag('color=truecolor')) {
-		return 3;
-	}
-
-	if (hasFlag('color=256')) {
-		return 2;
-	}
-
-	if (stream && !stream.isTTY && forceColor !== true) {
-		return 0;
-	}
-
-	const min = forceColor ? 1 : 0;
-
-	if (process.platform === 'win32') {
-		// Node.js 7.5.0 is the first version of Node.js to include a patch to
-		// libuv that enables 256 color output on Windows. Anything earlier and it
-		// won't work. However, here we target Node.js 8 at minimum as it is an LTS
-		// release, and Node.js 7 is not. Windows 10 build 10586 is the first Windows
-		// release that supports 256 colors. Windows 10 build 14931 is the first release
-		// that supports 16m/TrueColor.
-		const osRelease = os.release().split('.');
-		if (
-			Number(process.versions.node.split('.')[0]) >= 8 &&
-			Number(osRelease[0]) >= 10 &&
-			Number(osRelease[2]) >= 10586
-		) {
-			return Number(osRelease[2]) >= 14931 ? 3 : 2;
-		}
-
-		return 1;
-	}
-
-	if ('CI' in env) {
-		if (['TRAVIS', 'CIRCLECI', 'APPVEYOR', 'GITLAB_CI'].some(sign => sign in env) || env.CI_NAME === 'codeship') {
-			return 1;
-		}
-
-		return min;
-	}
-
-	if ('TEAMCITY_VERSION' in env) {
-		return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-	}
-
-	if (env.COLORTERM === 'truecolor') {
-		return 3;
-	}
-
-	if ('TERM_PROGRAM' in env) {
-		const version = parseInt((env.TERM_PROGRAM_VERSION || '').split('.')[0], 10);
-
-		switch (env.TERM_PROGRAM) {
-			case 'iTerm.app':
-				return version >= 3 ? 3 : 2;
-			case 'Apple_Terminal':
-				return 2;
-			// No default
-		}
-	}
-
-	if (/-256(color)?$/i.test(env.TERM)) {
-		return 2;
-	}
-
-	if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
-		return 1;
-	}
-
-	if ('COLORTERM' in env) {
-		return 1;
-	}
-
-	if (env.TERM === 'dumb') {
-		return min;
-	}
-
-	return min;
-}
-
-function getSupportLevel(stream) {
-	const level = supportsColor(stream);
-	return translateLevel(level);
-}
-
-module.exports = {
-	supportsColor: getSupportLevel,
-	stdout: getSupportLevel(process.stdout),
-	stderr: getSupportLevel(process.stderr)
-};
 
 
 /***/ }),
@@ -6779,7 +6779,7 @@ module.exports = require("zlib");
 
 /***/ }),
 
-/***/ 3914:
+/***/ 964:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -6790,27 +6790,27 @@ exports["default"] = global;
 
 /***/ }),
 
-/***/ 4070:
+/***/ 1044:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installTimerFunctions = exports.transports = exports.Transport = exports.protocol = exports.Socket = void 0;
-const socket_js_1 = __nccwpck_require__(7989);
+const socket_js_1 = __nccwpck_require__(7440);
 Object.defineProperty(exports, "Socket", ({ enumerable: true, get: function () { return socket_js_1.Socket; } }));
 exports.protocol = socket_js_1.Socket.protocol;
-var transport_js_1 = __nccwpck_require__(8758);
+var transport_js_1 = __nccwpck_require__(3897);
 Object.defineProperty(exports, "Transport", ({ enumerable: true, get: function () { return transport_js_1.Transport; } }));
-var index_js_1 = __nccwpck_require__(9975);
+var index_js_1 = __nccwpck_require__(6705);
 Object.defineProperty(exports, "transports", ({ enumerable: true, get: function () { return index_js_1.transports; } }));
-var util_js_1 = __nccwpck_require__(8590);
+var util_js_1 = __nccwpck_require__(2052);
 Object.defineProperty(exports, "installTimerFunctions", ({ enumerable: true, get: function () { return util_js_1.installTimerFunctions; } }));
 
 
 /***/ }),
 
-/***/ 7989:
+/***/ 7440:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -6820,13 +6820,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Socket = void 0;
-const index_js_1 = __nccwpck_require__(9975);
-const util_js_1 = __nccwpck_require__(8590);
-const parseqs_1 = __importDefault(__nccwpck_require__(1411));
-const parseuri_1 = __importDefault(__nccwpck_require__(9851));
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
-const component_emitter_1 = __nccwpck_require__(702);
-const engine_io_parser_1 = __nccwpck_require__(5790);
+const index_js_1 = __nccwpck_require__(6705);
+const util_js_1 = __nccwpck_require__(2052);
+const parseqs_1 = __importDefault(__nccwpck_require__(9789));
+const parseuri_1 = __importDefault(__nccwpck_require__(5361));
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
+const component_emitter_1 = __nccwpck_require__(5951);
+const engine_io_parser_1 = __nccwpck_require__(2226);
 const debug = (0, debug_1.default)("engine.io-client:socket"); // debug()
 class Socket extends component_emitter_1.Emitter {
     /**
@@ -7408,7 +7408,7 @@ function clone(obj) {
 
 /***/ }),
 
-/***/ 8758:
+/***/ 3897:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -7418,10 +7418,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Transport = void 0;
-const engine_io_parser_1 = __nccwpck_require__(5790);
-const component_emitter_1 = __nccwpck_require__(702);
-const util_js_1 = __nccwpck_require__(8590);
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
+const engine_io_parser_1 = __nccwpck_require__(2226);
+const component_emitter_1 = __nccwpck_require__(5951);
+const util_js_1 = __nccwpck_require__(2052);
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
 const debug = (0, debug_1.default)("engine.io-client:transport"); // debug()
 class Transport extends component_emitter_1.Emitter {
     /**
@@ -7537,15 +7537,15 @@ exports.Transport = Transport;
 
 /***/ }),
 
-/***/ 9975:
+/***/ 6705:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.transports = void 0;
-const polling_xhr_js_1 = __nccwpck_require__(6816);
-const websocket_js_1 = __nccwpck_require__(1248);
+const polling_xhr_js_1 = __nccwpck_require__(4331);
+const websocket_js_1 = __nccwpck_require__(3444);
 exports.transports = {
     websocket: websocket_js_1.WS,
     polling: polling_xhr_js_1.XHR
@@ -7554,7 +7554,7 @@ exports.transports = {
 
 /***/ }),
 
-/***/ 6816:
+/***/ 4331:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -7565,12 +7565,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Request = exports.XHR = void 0;
-const xmlhttprequest_js_1 = __importDefault(__nccwpck_require__(5625));
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
-const globalThis_js_1 = __importDefault(__nccwpck_require__(3914));
-const util_js_1 = __nccwpck_require__(8590);
-const component_emitter_1 = __nccwpck_require__(702);
-const polling_js_1 = __nccwpck_require__(4795);
+const xmlhttprequest_js_1 = __importDefault(__nccwpck_require__(7559));
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
+const globalThis_js_1 = __importDefault(__nccwpck_require__(964));
+const util_js_1 = __nccwpck_require__(2052);
+const component_emitter_1 = __nccwpck_require__(5951);
+const polling_js_1 = __nccwpck_require__(9405);
 const debug = (0, debug_1.default)("engine.io-client:polling-xhr"); // debug()
 /**
  * Empty function
@@ -7840,7 +7840,7 @@ function unloadHandler() {
 
 /***/ }),
 
-/***/ 4795:
+/***/ 9405:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -7850,11 +7850,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Polling = void 0;
-const transport_js_1 = __nccwpck_require__(8758);
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
-const yeast_1 = __importDefault(__nccwpck_require__(6311));
-const parseqs_1 = __importDefault(__nccwpck_require__(1411));
-const engine_io_parser_1 = __nccwpck_require__(5790);
+const transport_js_1 = __nccwpck_require__(3897);
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
+const yeast_1 = __importDefault(__nccwpck_require__(3419));
+const parseqs_1 = __importDefault(__nccwpck_require__(9789));
+const engine_io_parser_1 = __nccwpck_require__(2226);
 const debug = (0, debug_1.default)("engine.io-client:polling"); // debug()
 class Polling extends transport_js_1.Transport {
     constructor() {
@@ -8032,7 +8032,7 @@ exports.Polling = Polling;
 
 /***/ }),
 
-/***/ 9059:
+/***/ 5850:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8042,7 +8042,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.nextTick = exports.defaultBinaryType = exports.usingBrowserWebSocket = exports.WebSocket = void 0;
-const ws_1 = __importDefault(__nccwpck_require__(9645));
+const ws_1 = __importDefault(__nccwpck_require__(1161));
 exports.WebSocket = ws_1.default;
 exports.usingBrowserWebSocket = false;
 exports.defaultBinaryType = "nodebuffer";
@@ -8051,7 +8051,7 @@ exports.nextTick = process.nextTick;
 
 /***/ }),
 
-/***/ 1248:
+/***/ 3444:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8061,13 +8061,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WS = void 0;
-const transport_js_1 = __nccwpck_require__(8758);
-const parseqs_1 = __importDefault(__nccwpck_require__(1411));
-const yeast_1 = __importDefault(__nccwpck_require__(6311));
-const util_js_1 = __nccwpck_require__(8590);
-const websocket_constructor_js_1 = __nccwpck_require__(9059);
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
-const engine_io_parser_1 = __nccwpck_require__(5790);
+const transport_js_1 = __nccwpck_require__(3897);
+const parseqs_1 = __importDefault(__nccwpck_require__(9789));
+const yeast_1 = __importDefault(__nccwpck_require__(3419));
+const util_js_1 = __nccwpck_require__(2052);
+const websocket_constructor_js_1 = __nccwpck_require__(5850);
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
+const engine_io_parser_1 = __nccwpck_require__(2226);
 const debug = (0, debug_1.default)("engine.io-client:websocket"); // debug()
 // detect ReactNative environment
 const isReactNative = typeof navigator !== "undefined" &&
@@ -8253,7 +8253,7 @@ exports.WS = WS;
 
 /***/ }),
 
-/***/ 5625:
+/***/ 7559:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8278,14 +8278,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const XMLHttpRequestModule = __importStar(__nccwpck_require__(7687));
+const XMLHttpRequestModule = __importStar(__nccwpck_require__(9056));
 const XMLHttpRequest = XMLHttpRequestModule.default || XMLHttpRequestModule;
 exports["default"] = XMLHttpRequest;
 
 
 /***/ }),
 
-/***/ 8590:
+/***/ 2052:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8295,7 +8295,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.installTimerFunctions = exports.pick = void 0;
-const globalThis_js_1 = __importDefault(__nccwpck_require__(3914));
+const globalThis_js_1 = __importDefault(__nccwpck_require__(964));
 function pick(obj, ...attr) {
     return attr.reduce((acc, k) => {
         if (obj.hasOwnProperty(k)) {
@@ -8323,7 +8323,7 @@ exports.installTimerFunctions = installTimerFunctions;
 
 /***/ }),
 
-/***/ 1204:
+/***/ 4599:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -8350,13 +8350,13 @@ exports.ERROR_PACKET = ERROR_PACKET;
 
 /***/ }),
 
-/***/ 7761:
+/***/ 9227:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const commons_js_1 = __nccwpck_require__(1204);
+const commons_js_1 = __nccwpck_require__(4599);
 const decodePacket = (encodedPacket, binaryType) => {
     if (typeof encodedPacket !== "string") {
         return {
@@ -8407,13 +8407,13 @@ exports["default"] = decodePacket;
 
 /***/ }),
 
-/***/ 38:
+/***/ 1459:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const commons_js_1 = __nccwpck_require__(1204);
+const commons_js_1 = __nccwpck_require__(4599);
 const encodePacket = ({ type, data }, supportsBinary, callback) => {
     if (data instanceof ArrayBuffer || ArrayBuffer.isView(data)) {
         const buffer = toBuffer(data);
@@ -8442,16 +8442,16 @@ exports["default"] = encodePacket;
 
 /***/ }),
 
-/***/ 5790:
+/***/ 2226:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.decodePayload = exports.decodePacket = exports.encodePayload = exports.encodePacket = exports.protocol = void 0;
-const encodePacket_js_1 = __nccwpck_require__(38);
+const encodePacket_js_1 = __nccwpck_require__(1459);
 exports.encodePacket = encodePacket_js_1.default;
-const decodePacket_js_1 = __nccwpck_require__(7761);
+const decodePacket_js_1 = __nccwpck_require__(9227);
 exports.decodePacket = decodePacket_js_1.default;
 const SEPARATOR = String.fromCharCode(30); // see https://en.wikipedia.org/wiki/Delimiter#ASCII_delimited_text
 const encodePayload = (packets, callback) => {
@@ -8488,7 +8488,7 @@ exports.protocol = 4;
 
 /***/ }),
 
-/***/ 6116:
+/***/ 787:
 /***/ (function(module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8498,12 +8498,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports["default"] = exports.connect = exports.io = exports.Socket = exports.Manager = exports.protocol = void 0;
-const url_js_1 = __nccwpck_require__(263);
-const manager_js_1 = __nccwpck_require__(4602);
+const url_js_1 = __nccwpck_require__(9445);
+const manager_js_1 = __nccwpck_require__(1215);
 Object.defineProperty(exports, "Manager", ({ enumerable: true, get: function () { return manager_js_1.Manager; } }));
-const socket_js_1 = __nccwpck_require__(9145);
+const socket_js_1 = __nccwpck_require__(5249);
 Object.defineProperty(exports, "Socket", ({ enumerable: true, get: function () { return socket_js_1.Socket; } }));
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
 const debug = debug_1.default("socket.io-client"); // debug()
 /**
  * Managers cache.
@@ -8557,7 +8557,7 @@ Object.assign(lookup, {
  *
  * @public
  */
-var socket_io_parser_1 = __nccwpck_require__(6377);
+var socket_io_parser_1 = __nccwpck_require__(1877);
 Object.defineProperty(exports, "protocol", ({ enumerable: true, get: function () { return socket_io_parser_1.protocol; } }));
 
 module.exports = lookup;
@@ -8565,7 +8565,7 @@ module.exports = lookup;
 
 /***/ }),
 
-/***/ 4602:
+/***/ 1215:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8594,13 +8594,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Manager = void 0;
-const engine_io_client_1 = __nccwpck_require__(4070);
-const socket_js_1 = __nccwpck_require__(9145);
-const parser = __importStar(__nccwpck_require__(6377));
-const on_js_1 = __nccwpck_require__(4765);
-const backo2_1 = __importDefault(__nccwpck_require__(8669));
-const component_emitter_1 = __nccwpck_require__(702);
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
+const engine_io_client_1 = __nccwpck_require__(1044);
+const socket_js_1 = __nccwpck_require__(5249);
+const parser = __importStar(__nccwpck_require__(1877));
+const on_js_1 = __nccwpck_require__(5039);
+const backo2_1 = __importDefault(__nccwpck_require__(484));
+const component_emitter_1 = __nccwpck_require__(5951);
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
 const debug = debug_1.default("socket.io-client:manager"); // debug()
 class Manager extends component_emitter_1.Emitter {
     constructor(uri, opts) {
@@ -8968,7 +8968,7 @@ exports.Manager = Manager;
 
 /***/ }),
 
-/***/ 4765:
+/***/ 5039:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -8986,7 +8986,7 @@ exports.on = on;
 
 /***/ }),
 
-/***/ 9145:
+/***/ 5249:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -8996,10 +8996,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Socket = void 0;
-const socket_io_parser_1 = __nccwpck_require__(6377);
-const on_js_1 = __nccwpck_require__(4765);
-const component_emitter_1 = __nccwpck_require__(702);
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
+const socket_io_parser_1 = __nccwpck_require__(1877);
+const on_js_1 = __nccwpck_require__(5039);
+const component_emitter_1 = __nccwpck_require__(5951);
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
 const debug = debug_1.default("socket.io-client:socket"); // debug()
 /**
  * Internal events.
@@ -9502,7 +9502,7 @@ exports.Socket = Socket;
 
 /***/ }),
 
-/***/ 263:
+/***/ 9445:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -9512,8 +9512,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.url = void 0;
-const parseuri_1 = __importDefault(__nccwpck_require__(9851));
-const debug_1 = __importDefault(__nccwpck_require__(9062)); // debug()
+const parseuri_1 = __importDefault(__nccwpck_require__(5361));
+const debug_1 = __importDefault(__nccwpck_require__(1308)); // debug()
 const debug = debug_1.default("socket.io-client:url"); // debug()
 /**
  * URL parser.
@@ -9580,14 +9580,14 @@ exports.url = url;
 
 /***/ }),
 
-/***/ 5913:
+/***/ 4530:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.reconstructPacket = exports.deconstructPacket = void 0;
-const is_binary_js_1 = __nccwpck_require__(1421);
+const is_binary_js_1 = __nccwpck_require__(9447);
 /**
  * Replaces every Buffer | ArrayBuffer | Blob | File in packet with a numbered placeholder.
  *
@@ -9668,17 +9668,17 @@ function _reconstructPacket(data, buffers) {
 
 /***/ }),
 
-/***/ 6377:
+/***/ 1877:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Decoder = exports.Encoder = exports.PacketType = exports.protocol = void 0;
-const component_emitter_1 = __nccwpck_require__(702);
-const binary_js_1 = __nccwpck_require__(5913);
-const is_binary_js_1 = __nccwpck_require__(1421);
-const debug_1 = __nccwpck_require__(9062); // debug()
+const component_emitter_1 = __nccwpck_require__(5951);
+const binary_js_1 = __nccwpck_require__(4530);
+const is_binary_js_1 = __nccwpck_require__(9447);
+const debug_1 = __nccwpck_require__(1308); // debug()
 const debug = debug_1.default("socket.io-parser"); // debug()
 /**
  * Protocol version.
@@ -9957,7 +9957,7 @@ class BinaryReconstructor {
 
 /***/ }),
 
-/***/ 1421:
+/***/ 9447:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -10063,7 +10063,7 @@ var __webpack_exports__ = {};
 (() => {
 var _socket = null;
 
-_socket = __nccwpck_require__(6116)('http://localhost:5050', {
+_socket = __nccwpck_require__(787)('http://localhost:5050', {
   autoConnect: false,
 });
 
@@ -10071,6 +10071,11 @@ _socket.on('connect', function () {
   if (_socket.connected) {
     console.log('successfully connected to server');
   }
+});
+
+_socket.on('connect_error', () => {
+  console.log('Unable to establish socket connection. Stopping process');
+  process.exit(1);
 });
 
 _socket.on('receivedNoti', function () {
