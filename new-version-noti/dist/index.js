@@ -10074,7 +10074,8 @@ _socket.on('connect', function () {
 });
 
 _socket.on('connect_error', () => {
-  console.log('Unable to establish socket connection. Stopping process');
+  console.log('Unable to establish socket connection. Stopping process...');
+  _socket.disconnect();
   process.exit(1);
 });
 
