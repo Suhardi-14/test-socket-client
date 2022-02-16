@@ -1,0 +1,32 @@
+name: 'Test run socket'
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  run_socket_client:
+    runs-on: ubuntu-latest
+    name: Copy socket client through ssh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: copy file via ssh key
+        uses: garygrossgarten/github-action-scp@release
+        with:
+          local: new-version-noti
+          remote: socket-client
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          privateKey: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            pwd
+            ls -l
