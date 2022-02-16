@@ -35,4 +35,4 @@ jobs:
             cd ~/socket-client
             pwd
             ls -l
-            npm run start
+            node dist/index.js
